@@ -1,0 +1,6 @@
+<button class="btn btn-primary loading-button" [disabled]="isLoading">
+  @if (isLoading) {
+  <span class="spinner"></span> Processando... } @else {
+  <span>{{ buttonText }}</span>
+  }
+</button>

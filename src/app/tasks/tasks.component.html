@@ -1,0 +1,225 @@
+<div class="tasks-container">
+  <header class="app-header">
+    <h1>Minhas Tarefas</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateTaskModal()">+ Nova Tarefa</button>
+      <button class="btn btn-secondary" (click)="onLogout()">Sair</button>
+    </div>
+  </header>
+
+  <section class="filter-section">
+    <div class="filter-row first-row">
+      <div class="filter-group number-filter">
+        <label for="filter-id">Número:</label>
+        <input type="text" id="filter-id" [(ngModel)]="filters.id" />
+      </div>
+    </div>
+
+    <div class="filter-row second-row">
+      <div class="filter-group title-filter">
+        <label for="filter-title">Título/Descrição:</label>
+        <input type="text" id="filter-title" [(ngModel)]="filters.title" />
+      </div>
+    </div>
+
+    <div class="filter-row third-row">
+      <div class="filter-group">
+        <label for="filter-responsible">Responsável:</label>
+        <select id="filter-responsible" [(ngModel)]="filters.responsible">
+          <option value="">Todos</option>
+          <option *ngFor="let responsible of responsibles" [value]="responsible">
+            {{ responsible }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-status">Situação:</label>
+        <select id="filter-status" [(ngModel)]="filters.status">
+          <option value="">Todas</option>
+          <option value="Em andamento">Em andamento</option>
+          <option value="Concluída">Concluída</option>
+        </select>
+      </div>
+      <div class="filter-group btn-search">
+          <button class="btn btn-primary" *ngIf="!isAnyFilterActive" (click)="applyFilters()">Buscar tarefas</button>
+          <button class="btn btn-secondary" *ngIf="isAnyFilterActive" (click)="clearFilters()">Limpar filtro</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="task-list">
+    <table class="tasks-table">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Título</th>
+          <th>Responsável</th>
+          <th class="action-buttons">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let task of filteredTasks">
+          <td>{{ task.id }}</td>
+          <td>{{ task.title }}</td>
+          <td>{{ task.responsible ? task.responsible : 'Não atribuído' }}</td>
+          <td class="action-buttons">
+              <button class="btn btn-edit" (click)="openEditTaskModal(task)">Editar</button> |
+              <button class="btn btn-delete" (click)="deleteTask(task.id)">Excluir</button>
+              <ng-container *ngIf="task.status === 'Em andamento'">
+                | <button class="btn btn-complete" (click)="completeTask(task)">Concluir</button>
+              </ng-container>
+              <ng-container *ngIf="task.status === 'Concluída'">
+                | <button class="btn btn-reopen" (click)="reopenTask(task)">Reabrir</button>
+              </ng-container>
+          </td>
+        </tr>
+        @for (task of filteredTasks; track task.id) {
+        <tr></tr>
+        } @empty {
+        <tr>
+          <td colspan="5" class="no-tasks">Nenhuma tarefa encontrada.</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <!-- TODO: colocar paginação -->
+  <!-- <div class="pagination">
+    <button class="btn" (click)="goToPreviousPage()" [disabled]="currentPage === 1">
+      Anterior
+    </button>
+    <span>Página {{ currentPage }} de {{ totalPages }}</span>
+    <button class="btn" (click)="goToNextPage()" [disabled]="currentPage === totalPages">
+      Próxima
+    </button>
+  </div> -->
+</div>
+
+<div class="modal" [class.is-active]="isModalOpen">
+  <div class="modal-background" (click)="closeModal()"></div>
+
+  <div class="modal-content">
+    <div class="card modal-card">
+
+      <!-- Header do modal -->
+      <div class="modal-header">
+        <h2>{{ editingTask ? 'Editar Tarefa' : 'Cadastrar Tarefa' }}</h2>
+      </div>
+
+      <form (ngSubmit)="saveTask()" #taskForm="ngForm">
+
+        <!-- TÍTULO -->
+        <div class="form-group" [class.invalid]="title.invalid && title.touched">
+          <label for="modal-title">Título:</label>
+          <input
+            id="modal-title"
+            type="text"
+            class="form-control"
+            [(ngModel)]="currentTask.title"
+            name="title"
+            required
+            #title="ngModel"
+            placeholder="Digite o título da tarefa"
+          />
+          <small class="error" *ngIf="title.invalid && title.touched">
+            O título é obrigatório.
+          </small>
+        </div>
+
+        <!-- DESCRIÇÃO -->
+        <div class="form-group">
+          <label for="modal-description">Descrição:</label>
+          <textarea
+            id="modal-description"
+            class="form-control"
+            [(ngModel)]="currentTask.description"
+            name="description"
+            placeholder="Descreva brevemente a tarefa"
+          ></textarea>
+        </div>
+
+        <!-- RESPONSÁVEL + PRIORIDADE -->
+        <div class="form-group-row">
+
+          <!-- RESPONSÁVEL -->
+          <div class="form-group" [class.invalid]="responsible.invalid && responsible.touched">
+            <label for="modal-responsible">Responsável:</label>
+            <div class="select-wrapper">
+              <select
+                id="modal-responsible"
+                class="form-control"
+                [(ngModel)]="currentTask.responsible"
+                required
+                name="responsible"
+                #responsible="ngModel"
+              >
+                <option value="" disabled>Selecione um responsável</option>
+                <option *ngFor="let responsible of responsibles" [ngValue]="responsible">
+                  {{ responsible }}
+                </option>
+              </select>
+
+              <span class="select-arrow"></span>
+            </div>
+
+            <small class="error" *ngIf="responsible.invalid && responsible.touched">
+              É necessário selecionar um responsável.
+            </small>
+          </div>
+
+          <!-- PRIORIDADE -->
+          <div class="form-group">
+            <label>Prioridade:</label>
+            <div class="custom-select" (click)="toggleDropdown()" #dropdown>
+              <div class="selected-option">
+                <span class="color-dot" [ngClass]="getPriorityClass(currentTask.priority)"></span>
+                {{ currentTask.priority || 'Selecione' }}
+                <span class="arrow-down"></span>
+              </div>
+
+              <div class="options-list" [class.show]="isDropdownOpen">
+                <div class="option" *ngFor="let option of priorityOptions" (click)="selectOption(option)">
+                  <span class="color-dot" [ngClass]="getPriorityClass(option.label)"></span>
+                  {{ option.label }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PRAZO -->
+        <div class="form-group deadline" [class.invalid]="deadline.invalid && deadline.touched">
+          <label for="modal-deadline">Deadline:</label>
+          <input
+            id="modal-deadline"
+            type="date"
+            class="form-control"
+            [(ngModel)]="currentTask.deadline"
+            required
+            name="deadline"
+            #deadline="ngModel"
+          />
+          <small class="error" *ngIf="deadline.invalid && deadline.touched">
+            O prazo é obrigatório.
+          </small>
+        </div>
+
+        <!-- BOTÕES -->
+        <div class="modal-buttons">
+          <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancelar</button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="taskForm.invalid"
+          >
+            {{ editingTask ? 'Salvar alterações' : 'Cadastrar tarefa' }}
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>

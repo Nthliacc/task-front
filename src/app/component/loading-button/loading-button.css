@@ -1,0 +1,39 @@
+.loading-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #ffffff; /* Cor do texto */
+  background-color: #007bff; /* Cor de fundo do botão */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.spinner {
+  display: inline-block;
+  vertical-align: middle;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border-left-color: #ffffff; /* Cor branca para o spinner */
+  animation: spin 1s ease infinite;
+  margin-right: 8px; /* Espaçamento entre o spinner e o texto */
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
