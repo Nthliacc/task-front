@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../environments/environment';
 
 interface Response {
   content: Task[] | any;
@@ -22,8 +23,7 @@ interface Task {
   providedIn: 'root'
 })
 export class TasksService {
-  private apiUrl = 'http://localhost:8080/api/tasks';
-  private usersApiUrl = 'http://localhost:8080/api/auth/users';
+  private apiUrl = `${environment.apiUrl}/api/tasks`;
 
   constructor(private http: HttpClient, private authService: AuthService) { }
 
